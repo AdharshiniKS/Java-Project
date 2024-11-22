@@ -1,0 +1,150 @@
+package PROJECT1;
+
+import java.sql.*;
+import java.util.Scanner;
+
+public class Project {
+
+    private static final String jdbcURL = "jdbc:mysql://localhost:1506/DB2"; 
+    private static final String username = "root"; 
+    private static final String password = "Adhu@2006";
+
+    public static void main(String[] args) {
+        Project system = new Project();
+        system.menu();
+    }
+
+    private void menu() {
+        Scanner scanner = new Scanner(System.in);
+
+        while (true) {
+            System.out.println("\n=== Student Feedback System Menu ===");
+            System.out.println("1. Add Feedback");
+            System.out.println("2. Update Feedback");
+            System.out.println("3. Delete Feedback");
+            System.out.println("4. View Feedback for a Particular Teacher");
+            System.out.println("5. Exit");
+            System.out.print("Enter your choice: ");
+
+            int choice = scanner.nextInt();
+            scanner.nextLine(); 
+
+            switch (choice) {
+                case 1 -> addFeedback(scanner);
+                case 2 -> updateFeedback(scanner);
+                case 3 -> deleteFeedback(scanner);
+                case 4 -> viewTeacherFeedback(scanner);
+                case 5 -> {
+                    System.out.println("Exiting Student Feedback System. Goodbye!");
+                    scanner.close();
+                    return;
+                }
+                default -> System.out.println("Invalid choice! Please try again.");
+            }
+        }
+    }
+
+    private void addFeedback(Scanner scanner) {
+        try (Connection conn = DriverManager.getConnection(jdbcURL, username, password)) {
+            String query = "INSERT INTO StudentFeedback (roll_number, name, class, section, teacher_name, subject, rating, comment) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+            try (PreparedStatement stmt = conn.prepareStatement(query)) {
+                System.out.print("Enter Roll Number: ");
+                stmt.setString(1, scanner.nextLine());
+                System.out.print("Enter Name: ");
+                stmt.setString(2, scanner.nextLine());
+                System.out.print("Enter Class: ");
+                stmt.setString(3, scanner.nextLine());
+                System.out.print("Enter Section: ");
+                stmt.setString(4, scanner.nextLine());
+                System.out.print("Enter Teacher Name: ");
+                stmt.setString(5, scanner.nextLine());
+                System.out.print("Enter Subject: ");
+                stmt.setString(6, scanner.nextLine());
+                System.out.print("Enter Rating (1-5): ");
+                stmt.setInt(7, scanner.nextInt());
+                scanner.nextLine();
+                System.out.print("Enter Comment: ");
+                stmt.setString(8, scanner.nextLine());
+
+                stmt.executeUpdate();
+                System.out.println("Feedback added successfully!");
+            }
+        } catch (SQLException e) {
+            System.out.println("Error adding feedback: " + e.getMessage());
+        }
+    }
+
+    private void updateFeedback(Scanner scanner) {
+        try (Connection conn = DriverManager.getConnection(jdbcURL, username, password)) {
+            System.out.print("Enter Feedback ID to Update: ");
+            int feedbackId = scanner.nextInt();
+            scanner.nextLine();
+            System.out.print("Enter New Rating (1-5): ");
+            int rating = scanner.nextInt();
+            scanner.nextLine();
+            System.out.print("Enter New Comment: ");
+            String comment = scanner.nextLine();
+
+            String query = "UPDATE StudentFeedback SET rating = ?, comment = ? WHERE feedback_id = ?";
+            try (PreparedStatement stmt = conn.prepareStatement(query)) {
+                stmt.setInt(1, rating);
+                stmt.setString(2, comment);
+                stmt.setInt(3, feedbackId);
+                int rowsUpdated = stmt.executeUpdate();
+                if (rowsUpdated > 0) {
+                    System.out.println("Feedback updated successfully!");
+                } else {
+                    System.out.println("Feedback ID not found.");
+                }
+            }
+        } catch (SQLException e) {
+            System.out.println("Error updating feedback: " + e.getMessage());
+        }
+    }
+
+    private void deleteFeedback(Scanner scanner) {
+        try (Connection conn = DriverManager.getConnection(jdbcURL, username, password)) {
+            System.out.print("Enter Feedback ID to Delete: ");
+            int feedbackId = scanner.nextInt();
+
+            String query = "DELETE FROM StudentFeedback WHERE feedback_id = ?";
+            try (PreparedStatement stmt = conn.prepareStatement(query)) {
+                stmt.setInt(1, feedbackId);
+                int rowsDeleted = stmt.executeUpdate();
+                if (rowsDeleted > 0) {
+                    System.out.println("Feedback deleted successfully!");
+                } else {
+                    System.out.println("Feedback ID not found.");
+                }
+            }
+        } catch (SQLException e) {
+            System.out.println("Error deleting feedback: " + e.getMessage());
+        }
+    }
+
+    private void viewTeacherFeedback(Scanner scanner) {
+        System.out.print("Enter Teacher Name: ");
+        String teacherName = scanner.nextLine();
+
+        String query = "SELECT * FROM StudentFeedback WHERE teacher_name = ?";
+        try (Connection conn = DriverManager.getConnection(jdbcURL, username, password);
+             PreparedStatement stmt = conn.prepareStatement(query)) {
+            stmt.setString(1, teacherName);
+            try (ResultSet rs = stmt.executeQuery()) {
+                System.out.println("\nFeedback for Teacher: " + teacherName);
+                while (rs.next()) {
+                    System.out.println("Feedback ID: " + rs.getInt("feedback_id") +
+                            ", Roll Number: " + rs.getString("roll_number") +
+                            ", Name: " + rs.getString("name") +
+                            ", Class: " + rs.getString("class") +
+                            ", Section: " + rs.getString("section") +
+                            ", Subject: " + rs.getString("subject") +
+                            ", Rating: " + rs.getInt("rating") +
+                            ", Comment: " + rs.getString("comment"));
+                }
+            }
+        } catch (SQLException e) {
+            System.out.println("Error retrieving feedback: " + e.getMessage());
+        }
+    }
+}
