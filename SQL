@@ -1,0 +1,22 @@
+CREATE DATABASE DB2;
+USE DB2;
+
+CREATE TABLE StudentFeedback (
+    feedback_id INT AUTO_INCREMENT PRIMARY KEY,
+    roll_number VARCHAR(50),
+    name VARCHAR(100),
+    class VARCHAR(50),
+    section VARCHAR(10),
+    teacher_name VARCHAR(100),
+    subject VARCHAR(100),
+    rating INT CHECK (rating BETWEEN 1 AND 5),
+    comment TEXT
+);
+
+CREATE TABLE TeacherFeedback (
+    feedback_id INT AUTO_INCREMENT PRIMARY KEY,
+    teacher_name VARCHAR(100),
+    subject VARCHAR(100),
+    rating INT CHECK (rating BETWEEN 1 AND 5),
+    comment TEXT
+);
